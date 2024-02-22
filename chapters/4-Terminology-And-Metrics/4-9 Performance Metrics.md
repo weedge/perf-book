@@ -98,6 +98,7 @@ AVX256  256-bit instruction        FP_ARITH_INST_RETIRED.256B_PACKED_SINGLE)
 Ip      Instructions per SW        INST_RETIRED.ANY / 
 SWPF    prefetch instruction       SW_PREFETCH_ACCESS.T0:u0xF
         (of any type)
+        
 --------------------------------------------------------------------------
 
 Table: A list (not exhaustive) of secondary metrics along with descriptions and formulas for the Intel Goldencove architecture. {#tbl:perf_metrics}

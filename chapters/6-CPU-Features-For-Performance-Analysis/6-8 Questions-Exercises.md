@@ -1,4 +1,4 @@
-## Questions and Exercises {.unlisted .unnumbered}
+[Title](<6-7 Precise Event Based Sampling (PEBS).md>)## Questions and Exercises {.unlisted .unnumbered}
 
 1. Name the four level-1 categories in TMA performance methodology.
 2. What are the benefits of HW event-based sampling helps?

@@ -28,6 +28,7 @@ splitting  blocks of code    utilization   complex CFG when
 Function   group hot         better cache  many small            linker
 reorder    functions         utilization   hot functions
            together
+
 --------------------------------------------------------------------------
 
 Table: Summary of CPU Front-End optimizations. {#tbl:CPU_FE_OPT}
