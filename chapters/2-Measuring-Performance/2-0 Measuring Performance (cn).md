@@ -1,6 +1,3 @@
----
-typora-root-url: ..\..\img
----
 # 第一部分：在现代CPU上的性能分析 {.unnumbered}
 
 # 性能测量 {#sec:secMeasPerf}

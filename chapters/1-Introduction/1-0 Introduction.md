@@ -1,7 +1,3 @@
----
-typora-root-url: ..\..\img
----
-
 # Introduction {#sec:sec1}
 
 [TODO]: update the intro. It is the most important part of the book. :) Update that we are now in the beginning of a new era. PC -> mobile -> cloud -> AI?

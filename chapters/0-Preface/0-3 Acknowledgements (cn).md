@@ -1,8 +1,3 @@
----
-typora-root-url: ..\..\img
-
----
-
 ## 致谢 {.unlisted .unnumbered}
 
 非常感谢Mark E. Dawson，他在撰写本书的几个部分时提供了帮助：《为DTLB优化》（[@sec:secDTLB]）、《为ITLB优化》（[@sec:FeTLB]）、《缓存预热》（[@sec:CacheWarm]）、系统调优（[@sec:SysTune]）、关于多线程应用程序性能扩展和开销的部分（[@sec:secAmdahl]）、使用COZ性能分析器的部分（[@sec:COZ]）、关于eBPF的部分（[@sec:secEBPF]）、《检测一致性问题》（[@sec:TrueFalseSharing]）。Mark是高频交易行业的知名专家。在撰写本书的不同阶段，Mark非常乐意分享他的专业知识和反馈意见。

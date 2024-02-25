@@ -2,7 +2,7 @@
 typora-root-url: ..\..\img
 ---
 
-[TODO]:重做尺度研究
+[TODO]:重做扩展研究
 
 ## 性能扩展和开销 {#sec:secAmdahl}
 

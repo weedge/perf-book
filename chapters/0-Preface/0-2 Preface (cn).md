@@ -1,8 +1,3 @@
----
-typora-root-url: ..\..\img
-
----
-
 # 前言 {.unnumbered .unlisted}
 
 ## 关于作者 {.unlisted .unnumbered}
