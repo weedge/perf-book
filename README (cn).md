@@ -33,7 +33,11 @@
 运行：
 ```bash
 # Linux bash
+# for original en tex files
 python export_book.py && pdflatex book.tex && bibtex book && pdflatex book.tex && pdflatex book.tex
+
+# for zh(cn) tex files, use xelatex
+python export_book_zh.py && xelatex book.tex && bibtex book && xelatex book.tex && xelatex book.tex
 
 # Windows Powershell
 function Run-Block-With-Error($block) {

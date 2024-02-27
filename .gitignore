@@ -7,3 +7,9 @@ glossary.tex.aux
 /chapters/8-Overview-Of-Performance-Analysis-Tools/.vscode
 gitbook/
 *~
+
+#latexmk
+*.aux
+*.fdb_latexmk
+*.fls
+*.log

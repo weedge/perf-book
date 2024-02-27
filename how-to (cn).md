@@ -33,7 +33,7 @@ C4H         00H   BR_INST_RETIRED.      撤回的分支指令。
                      ALL_BRANCHES                  
 --------------------------------------------------------------------------
 
-表格：Skylake 性能事件的编码示例。{@tbl:perf_count}
+Table: Skylake 性能事件的编码示例。 {@tbl:perf_count}
 ```
 
 在文本中引用它为 `{@tbl:perf_count}`
