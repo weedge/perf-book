@@ -26,7 +26,7 @@ Architecture Performance Monitoring Features (0xa/edx):
 
 ### 性能监控计数器 {#sec:PMC}
 
-如果我们想象一下对处理器的简化视图，它可能看起来像图@fig:PMC所示的样子。正如我们在本章前面讨论过的，现代CPU具有缓存、分支预测器、执行流水线和其他单元。当连接到多个单元时，PMC可以从中收集有趣的统计信息。例如，它可以计算经过了多少个时钟周期，执行了多少条指令，在此期间发生了多少缓存失效或分支预测错误等性能事件。
+如果我们想象一下对处理器的简化视图，它可能看起来像图 @fig:PMC 所示的样子。正如我们在本章前面讨论过的，现代CPU具有缓存、分支预测器、执行流水线和其他单元。当连接到多个单元时，PMC可以从中收集有趣的统计信息。例如，它可以计算经过了多少个时钟周期，执行了多少条指令，在此期间发生了多少缓存失效或分支预测错误等性能事件。
 
 ![带有性能监控计数器的CPU的简化视图。](../../img/uarch/PMC.png){#fig:PMC width=60%}
 
@@ -36,7 +36,7 @@ Architecture Performance Monitoring Features (0xa/edx):
 
 例如，在Intel Skylake架构（PMU版本4，参见[@lst:QueryPMU]），每个物理核心有三个固定计数器和八个可编程计数器。这三个固定计数器分别设置为计算核心时钟、参考时钟和已退休指令（有关这些指标的更多详细信息，请参见[@sec:secMetrics]）。AMD Zen4和ARM Neoverse V1核心每个处理器核心支持6个可编程性能监控计数器，没有固定计数器。
 
-PMU提供了100多种可用于监控的事件并不罕见。图@fig:PMU仅显示了现代Intel CPU上供监控的性能事件的一小部分。不难注意到可用PMC的数量远远小于性能事件的数量。无法同时计算所有事件，但是分析工具通过在程序执行期间在性能事件组之间进行复用来解决此问题（参见[@sec:secMultiplex]）。
+PMU提供了100多种可用于监控的事件并不罕见。图 @fig:PMU 仅显示了现代Intel CPU上供监控的性能事件的一小部分。不难注意到可用PMC的数量远远小于性能事件的数量。无法同时计算所有事件，但是分析工具通过在程序执行期间在性能事件组之间进行复用来解决此问题（参见[@sec:secMultiplex]）。
 
 - 对于Intel CPU，可以在[@IntelOptimizationManual, Volume 3B, Chapter 20]中找到性能事件的完整列表，或者在[perfmon-events.intel.com](https://perfmon-events.intel.com/)上找到。
 - AMD并不为每个AMD处理器发布性能监控事件的列表。感兴趣的读者可以在Linux perf源代码中找到一些信息[代码](https://github.com/torvalds/linux/blob/master/arch/x86/events/amd/core.c)[^3]。此外，您可以使用AMD uProf命令行工具列出可用于监控的性能事件。有关AMD性能计数器的一般信息，请参见[@AMDProgrammingManual, 13.2 Performance Monitoring Counters]。

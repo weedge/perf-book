@@ -34,7 +34,7 @@ a.c:5:3: remark: unrolled loop by a factor of 8 with run-time trip count [-Rpass
   ^
 ```
 
-检查上面的优化报告，我们可以看到循环没有被矢量化，而是被展开了。开发人员并不总是很容易识别 [@lst:optReport] 第 6 行循环中是否存在循环进位依赖。由 c[i-1] 加载的值取决于前一次迭代的存储（参见图 @fig:VectorDep 中的操作 \circled{2} 和 \circled{3}）。可以通过手动展开循环的前几个迭代来揭示依赖关系：
+检查上面的优化报告，我们可以看到循环没有被矢量化，而是被展开了。开发人员并不总是很容易识别 [@lst:optReport] 第 6 行循环中是否存在循环进位依赖。由 c[i-1] 加载的值取决于前一次迭代的存储（参见图  @fig:VectorDep 中的操作 \circled{2} 和 \circled{3}）。可以通过手动展开循环的前几个迭代来揭示依赖关系：
 
 ```cpp
 // iteration 1

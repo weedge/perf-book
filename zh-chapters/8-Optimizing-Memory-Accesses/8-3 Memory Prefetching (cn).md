@@ -8,7 +8,7 @@
 
 当数据访问模式太复杂无法预测时，硬件预取器就会失败。软件开发人员对此无能为力，因为我们无法控制该单元的行为。另一方面，OOO 引擎不像硬件预取器那样试图预测未来需要的内存位置。因此，它成功的唯一衡量标准是它通过提前调度加载隐藏了多少延迟。
 
-考虑 [@lst:MemPrefetch1] 中的一段代码片段，其中 `arr` 是一个包含一百万个整数的数组。索引 `idx` 被赋予一个随机值，然后立即用于访问 `arr` 中的一个位置，该位置几乎肯定会错过缓存，因为它是随机的。硬件预取器不可能预测，因为每次加载都进入内存中一个完全新的位置。从知道内存位置的地址（从函数 `random_distribution` 返回）到需要该内存位置的值（调用 `doSomeExtensiveComputation`）的时间间隔称为 *预取窗口*。在这个例子中，由于预取窗口非常小，OOO 引擎没有机会提前发出加载指令。这导致内存访问 `arr[idx]` 的延迟成为执行循环时的关键路径，如图 @fig:SWmemprefetch1 所示。可以看到，程序在没有取得值的情况下等待（阴影填充矩形），无法向前推进。
+考虑 [@lst:MemPrefetch1] 中的一段代码片段，其中 `arr` 是一个包含一百万个整数的数组。索引 `idx` 被赋予一个随机值，然后立即用于访问 `arr` 中的一个位置，该位置几乎肯定会错过缓存，因为它是随机的。硬件预取器不可能预测，因为每次加载都进入内存中一个完全新的位置。从知道内存位置的地址（从函数 `random_distribution` 返回）到需要该内存位置的值（调用 `doSomeExtensiveComputation`）的时间间隔称为 *预取窗口*。在这个例子中，由于预取窗口非常小，OOO 引擎没有机会提前发出加载指令。这导致内存访问 `arr[idx]` 的延迟成为执行循环时的关键路径，如图  @fig:SWmemprefetch1 所示。可以看到，程序在没有取得值的情况下等待（阴影填充矩形），无法向前推进。
 
 代码清单:随机数为后续加载提供数据。
 
@@ -24,7 +24,7 @@ for (int i = 0; i < N; ++i) {
 
 这里还有另一个重要观察。当 CPU 接近完成第一次迭代时，它会推测性地开始执行来自第二次迭代的指令。这在迭代之间创建了一个积极的执行重叠。然而，即使在现代处理器中，也缺少足够的 OOO 功能，无法完全将缓存未命中延迟与来自迭代 1 的 `doSomeExtensiveComputation` 的执行重叠。换句话说，在我们的例子中，CPU 无法提前查看当前执行，以便足够早地发出加载指令。
 
-幸运的是，这并不是死路一条，因为有一种方法可以加速这段代码。为了隐藏缓存未命中延迟，我们需要将其与 `doSomeExtensiveComputation` 的执行重叠。如果我们管道化随机数生成并在下一次迭代中开始预取内存位置，就可以实现这一点，如 [@lst:MemPrefetch2] 所示。请注意使用 `__builtin_prefetch`: [https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html),[^4] 开发人员可以使用的特殊提示，明确请求 CPU 预取特定内存位置。图 @fig:SWmemprefetch2 展示了这种转换的图形说明。
+幸运的是，这并不是死路一条，因为有一种方法可以加速这段代码。为了隐藏缓存未命中延迟，我们需要将其与 `doSomeExtensiveComputation` 的执行重叠。如果我们管道化随机数生成并在下一次迭代中开始预取内存位置，就可以实现这一点，如 [@lst:MemPrefetch2] 所示。请注意使用 `__builtin_prefetch`: [https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html),[^4] 开发人员可以使用的特殊提示，明确请求 CPU 预取特定内存位置。图  @fig:SWmemprefetch2 展示了这种转换的图形说明。
 
 代码清单:利用明确的软件内存预取提示。
 

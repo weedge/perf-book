@@ -1,8 +1,8 @@
 ### 在英特尔平台上的 TMA {#sec:secTMA_Intel}
 
-TMA方法学首次由英特尔于2014年提出，并从SandyBridge系列处理器开始提供支持。英特尔的实现支持每个高级别桶的嵌套类别，从而更好地了解程序中的CPU性能瓶颈（参见图 @fig:TMA）。
+TMA方法学首次由英特尔于2014年提出，并从SandyBridge系列处理器开始提供支持。英特尔的实现支持每个高级别桶的嵌套类别，从而更好地了解程序中的CPU性能瓶颈（参见图  @fig:TMA ）。
 
-该工作流程旨在“深入挖掘(drill down)”TMA层次结构的较低级别，直到我们达到对性能瓶颈的非常具体的分类为止。例如，首先，我们收集主要的四个桶的指标：`Front End Bound`、`Back End Bound`、`Retiring`、`Bad Speculation`。比如，我们发现程序执行的大部分时间被内存访问阻塞了（这是`Back End Bound`桶，参见图 @fig:TMA）。接下来的步骤是再次运行工作负载，并仅收集与`Memory Bound`桶有关的特定指标。这个过程重复进行，直到我们知道确切的根本原因，例如，`L3 Bound`。
+该工作流程旨在“深入挖掘(drill down)”TMA层次结构的较低级别，直到我们达到对性能瓶颈的非常具体的分类为止。例如，首先，我们收集主要的四个桶的指标：`Front End Bound`、`Back End Bound`、`Retiring`、`Bad Speculation`。比如，我们发现程序执行的大部分时间被内存访问阻塞了（这是`Back End Bound`桶，参见图  @fig:TMA ）。接下来的步骤是再次运行工作负载，并仅收集与`Memory Bound`桶有关的特定指标。这个过程重复进行，直到我们知道确切的根本原因，例如，`L3 Bound`。
 
 ![TMA性能瓶颈的层次结构。*© Image by Ahmad Yasin.*](../../img/pmu-features/TMAM.png){#fig:TMA width=90%}
 

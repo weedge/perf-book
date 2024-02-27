@@ -1,7 +1,9 @@
-
+---
+typora-root-url: ..\..\img
+---
 ## 现代CPU设计
 
-为了看到我们在本章讨论的所有概念如何在实践中使用，让我们来看看英特尔第12代酷睿处理器Goldencove的实现，该处理器于2021年上市。该核心被用作Alderlake和Sapphire Rapids平台中的P核心。图@fig:Goldencove_diag显示了Goldencove核心的模块图。请注意，本节仅描述了单个核心，而不是整个处理器。因此，我们将跳过关于频率、核心数量、L3缓存、核心互连、内存延迟和带宽以及其他内容的讨论。
+为了看到我们在本章讨论的所有概念如何在实践中使用，让我们来看看英特尔第12代酷睿处理器Goldencove的实现，该处理器于2021年上市。该核心被用作Alderlake和Sapphire Rapids平台中的P核心。图 @fig:Goldencove_diag 显示了Goldencove核心的模块图。请注意，本节仅描述了单个核心，而不是整个处理器。因此，我们将跳过关于频率、核心数量、L3缓存、核心互连、内存延迟和带宽以及其他内容的讨论。
 
 ![Intel GoldenCove微架构CPU核心的模块图。*© 图片来源[@IntelOptimizationManual]。*](../../img/uarch/goldencove_block_diagram.png){#fig:Goldencove_diag width=100%}
 
@@ -46,7 +48,7 @@ CPU后端采用乱序执行引擎执行指令并存储结果。CPU后端的核�
 
 [TODO]: 提到VEC堆栈同时执行fp和打包操作
 
-如图@fig:Goldencove_diag所示，有12个执行端口：
+如图 @fig:Goldencove_diag 所示，有12个执行端口：
 
 - 端口0、1、5、6和10提供所有整数（INT）以及浮点和矢量（VEC/FP）操作。分派到这些端口的指令不需要内存操作。
 - 端口2、3和11用于地址生成（AGU）和加载操作。
@@ -77,9 +79,9 @@ Goldencove核心每个周期最多可以执行三次加载和两次存储操作�
 
 ### TLB层次结构
 
-回想一下[@sec:TLBs]，虚拟地址到物理地址的转换被缓存在TLB中。Golden Cove的TLB层次结构如图@fig:GLC_TLB所示。与常规数据缓存类似，它有两个级别，其中级别1分
+回想一下[@sec:TLBs]，虚拟地址到物理地址的转换被缓存在TLB中。Golden Cove的TLB层次结构如图 @fig:GLC_TLB 所示。与常规数据缓存类似，它有两个级别，其中级别1分别为指令（ITLB）和数据（DTLB）有单独的实例。L1 ITLB有256个条目，用于常规的4KB页面，覆盖256 * 4KB等于1MB的内存空间，而L1 DTLB有96个条目，覆盖384KB。
 
-别为指令（ITLB）和数据（DTLB）有单独的实例。L1 ITLB有256个条目，用于常规的4KB页面，覆盖256 * 4KB等于1MB的内存空间，而L1 DTLB有96个条目，覆盖384KB。
+![Golden Cove的TLB层次.](../../img/uarch/GLC_TLB_hierarchy.png){#fig:GLC_TLB width=50%}
 
 第二级别的层次结构（STLB）缓存了指令和数据的转换。这是一个更大的存储，用于为在L1 TLB中未命中的请求提供服务。L2 STLB可以容纳2048个最近的数据和指令页面地址转换，覆盖总共8MB的内存空间。对于2MB的大页面，可用的条目较少：L1 ITLB有32个条目，L1 DTLB有32个条目，而L2 STLB只能使用1024个条目，这些条目也是共享的常规4KB页面。
 

@@ -25,7 +25,7 @@ void foo(bool cond1, bool cond2) {              void foo(bool cond1, bool cond2)
 
 请注意，我们通过使用 `noinline` 属性禁用了冷函数的内联。因为如果没有这个属性，编译器可能会决定内联它，这实际上会撤销我们的转换。或者，我们可以在 `cond1` 和 `cond2` 分支上都应用 `[[unlikely]]` 宏（参见[@sec:secLIKELY]），以传达给编译器不希望内联 `cold1` 和 `cold2` 函数。
 
-图@fig:FunctionSplitting 给出了这种转换的图形表示。因为我们在热路径中只留下了一个 `CALL` 指令，所以下一个热指令很可能会与上一个指令驻留在同一个缓存行中。这提高了 CPU 前端数据结构（如 I-cache 和 DSB）的利用率。
+图 @fig:FunctionSplitting 给出了这种转换的图形表示。因为我们在热路径中只留下了一个 `CALL` 指令，所以下一个热指令很可能会与上一个指令驻留在同一个缓存行中。这提高了 CPU 前端数据结构（如 I-cache 和 DSB）的利用率。
 
 <div id="fig:FunctionSplitting">
 
