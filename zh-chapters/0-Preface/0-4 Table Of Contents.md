@@ -1,4 +1,4 @@
-\setcounter{tocdepth}{3}
+\setcounter{tocdepth}{4}
 
 # 目录 {.unnumbered}
 

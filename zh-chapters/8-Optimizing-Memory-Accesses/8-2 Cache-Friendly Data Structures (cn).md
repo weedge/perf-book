@@ -88,7 +88,7 @@ struct CACHELINE_ALIGN S {
 
 对齐可能会导致未使用字节的空洞，从而降低内存带宽利用率。在上面的例子中，如果结构体 `S` 只有 40 个字节，那么下一个 `S` 对象将会从下一个缓存行的开头开始，这会在每个保存 `S` 结构体的缓存行中留下 64 - 40 = 24 个未使用的字节。
 
-有时需要填充数据结构成员以避免一些极端情况，例如缓存争用 [@fogOptimizeCpp, 第 9.10 章 缓存争用] 和伪共享 (参见 [@sec:secFalseSharing])。例如，在多线程应用程序中，当两个线程 A 和 B 访问同一结构的不同字段时，可能会出现伪共享问题。[@lst:PadFalseSharing1] 展示了可能发生这种情况的代码示例。由于结构体 `S` 的成员 `a` 和 `b` 可能占据同一个缓存行，因此缓存一致性问题可能会显著减慢程序运行速度。为了解决这个问题，可以填充 `S` 使得成员 `a` 和 `b` 不共享同一个缓存行，如 [@lst:PadFalseSharing2] 所示。
+有时需要填充数据结构成员以避免一些极端情况，例如缓存争用 [@fogOptimizeCpp, Chapter 9.10 Cache contentions] 和伪共享 (参见 [@sec:secFalseSharing])。例如，在多线程应用程序中，当两个线程 A 和 B 访问同一结构的不同字段时，可能会出现伪共享问题。[@lst:PadFalseSharing1] 展示了可能发生这种情况的代码示例。由于结构体 `S` 的成员 `a` 和 `b` 可能占据同一个缓存行，因此缓存一致性问题可能会显著减慢程序运行速度。为了解决这个问题，可以填充 `S` 使得成员 `a` 和 `b` 不共享同一个缓存行，如 [@lst:PadFalseSharing2] 所示。
 
 代码清单:填充数据:基线版本。
 
@@ -100,6 +100,7 @@ struct S {
 ~~~~
 
 代码清单:填充数据:改进版本。
+
 ~~~~ {#lst:PadFalseSharing2 .cpp}
 #define CACHELINE_ALIGN alignas(64) 
 struct S {
@@ -110,7 +111,7 @@ struct S {
 
 使用 `malloc` 进行动态分配时，保证返回的内存地址满足目标平台的最小对齐要求。一些应用程序可能受益于更严格的对齐。例如，以 64 字节对齐而不是默认的 16 字节对齐动态分配 16 字节。POSIX 系统的用户可以利用 `memalign`: [https://linux.die.net/man/3/memalign](https://linux.die.net/man/3/memalign)[^13] API 来实现这一目的。其他人可以像 这里: [https://embeddedartistry.com/blog/2017/02/22/generating-aligned-memory/](https://embeddedartistry.com/blog/2017/02/22/generating-aligned-memory/)[^14] 所描述的那样自己实现。
 
-对齐考虑最重要的领域之一是 SIMD 代码。当依赖于编译器自动矢量化时，开发人员无需做任何特殊操作。但是，当您使用编译器向量内联函数编写代码时 (参见 [@sec:secIntrinsics])，它们通常要求地址可被 16、32 或 64 整除。编译器内联头文件中提供的向量类型已经做了注释，以确保适当的对齐。[@fogOptimizeCpp]
+对齐考虑最重要的领域之一是 SIMD 代码。当依赖于编译器自动向量化时，开发人员无需做任何特殊操作。但是，当您使用编译器向量内联函数编写代码时 (参见 [@sec:secIntrinsics])，它们通常要求地址可被 16、32 或 64 整除。编译器内联头文件中提供的向量类型已经做了注释，以确保适当的对齐。[@fogOptimizeCpp]
 
 ```cpp
 // ptr will be aligned by alignof(__m512) if using C++17
@@ -124,9 +125,10 @@ __m512 * ptr = new __m512[N];
 
 ### 调整代码以适应内存层次结构
 
-某些应用程序的性能取决于特定级别的缓存大小。这里最著名的例子是用 循环阻塞: [https://en.wikipedia.org/wiki/Loop_nest_optimization](https://en.wikipedia.org/wiki/Loop_nest_optimization)（平铺）改进矩阵乘法。这个想法是将矩阵的工作大小分解成更小的块（tiles），使每个块都适合 L2 缓存。[^9] 大多数架构提供类似 `CPUID` 的指令，[^11] 它允许我们查询缓存的大小。或者，可以使用 缓存无关算法: [https://en.wikipedia.org/wiki/Cache-oblivious_algorithm](https://en.wikipedia.org/wiki/Cache-oblivious_algorithm)[^19]，其目标是针对任何大小的缓存都能合理地工作。
+某些应用程序的性能取决于特定级别缓存的大小。最著名的例子是通过[循环嵌套优化](https://en.wikipedia.org/wiki/Loop_nest_optimization)（平铺(tiling)）来改进矩阵乘法。这个想法是将矩阵的工作大小分解成更小的部分（平铺块(tiles)），以便每个平铺块都能适应L2缓存[^9]。 大多数架构提供了类似`CPUID`的指令[^11]， 这允许我们查询缓存的大小。或者，可以使用[缓存无关算法](https://en.wikipedia.org/wiki/Cache-oblivious_algorithm)[^19]，其目标是在任何大小的缓存下都能合理地工作。
 
-英特尔 CPU 具有一个数据线性地址硬件功能 (见 [@sec:sec_PEBS_DLA])，支持缓存阻塞，如 easyperf 博客文章所述 [https://easyperf.net/blog/2019/12/17/Detecting-false-sharing-using-perf#2-tune-the-code-for-better-utilization-of-cache-hierarchy](https://easyperf.net/blog/2019/12/17/Detecting-false-sharing-using-perf#2-tune-the-code-for-better-utilization-of-cache-hierarchy)[^10]。
+Intel CPU具有数据线性地址硬件特性（参见[@sec:sec_PEBS_DLA]），这支持在easyperf[博客文章](https://easyperf.net/blog/2019/12/17/Detecting-false-sharing-using-perf#2-tune-the-code-for-better-utilization-of-cache-hierarchy)[^10]中描述的缓存块(cache blocking)。附：[intel Cache Blocking Techniques
+](https://www.intel.com/content/www/us/en/developer/articles/technical/cache-blocking-techniques.html)
 
 [^5]: 相同的情况也适用于内存释放。
 [^6]: 行优先和列优先顺序 - [https://en.wikipedia.org/wiki/Row-_and_column-major_order](https://en.wikipedia.org/wiki/Row-_and_column-major_order)。

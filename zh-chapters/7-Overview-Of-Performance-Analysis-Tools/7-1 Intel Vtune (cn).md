@@ -49,7 +49,7 @@ VTune 可以提供关于运行中进程的非常丰富的信息。如果你想�
 
 以下是 VTune 最有趣的功能的一系列截图。为了这个示例，我们使用了 POV-Ray，一个用于创建 3D 图形的光线追踪器。图  @fig:VtuneHotspots 显示了 povray 3.7 的内置基准测试的热点分析，该基准测试使用 clang14 编译器编译，并使用 `-O3 -ffast-math -march=native -g` 选项在英特尔 Alderlake 系统上运行（Core i7-1260P，4 个 P 核 + 8 个 E 核），并使用 4 个工作线程。
 
-在图像的左侧部分，你可以看到工作负载中一系列热点函数，以及相应的 CPU 时间百分比和退休指令的数量。在右侧面板中，你可以看到导致调用函数 `pov::Noise` 的最频繁的调用栈之一。根据该截图，`44.4%` 的时间函数 `pov::Noise` 是从 `pov::Evaluate_TPat` 被调用的，而 `pov::Evaluate_TPat` 又是从 `pov::Compute_Pigment` 被调用的。请注意，调用栈并没有一直指向 `main` 函数。这是因为使用基于硬件的收集时，VTune 使用 LBR 来采样调用栈，其深度有限。在这里很可能涉及递归函数，要进一步调查，用户必须深入代码。
+在图像的左侧部分，你可以看到工作负载中一系列热点函数，以及相应的 CPU 时间百分比和退役(retired)指令的数量。在右侧面板中，你可以看到导致调用函数 `pov::Noise` 的最频繁的调用栈之一。根据该截图，`44.4%` 的时间函数 `pov::Noise` 是从 `pov::Evaluate_TPat` 被调用的，而 `pov::Evaluate_TPat` 又是从 `pov::Compute_Pigment` 被调用的。请注意，调用栈并没有一直指向 `main` 函数。这是因为使用基于硬件的收集时，VTune 使用 LBR 来采样调用栈，其深度有限。在这里很可能涉及递归函数，要进一步调查，用户必须深入代码。
 
 ![VTune 对 povray 内置基准测试的热点视图。](../../img/perf-tools/VtunePovray.png){#fig:VtuneHotspots width=100% }
 
@@ -69,7 +69,7 @@ VTune 可以提供关于运行中进程的非常丰富的信息。如果你想�
 
 ### Intel® VTune™ Profiler 中的 TMA {.unlisted .unnumbered}
 
-TMA 通过最新的 Intel VTune Profiler 中的 "[微架构探索](https://software.intel.com/en-us/vtune-help-general-exploration-analysis)"[^3] 分析进行展示。图  @fig:Vtune_GE 显示了 [7-zip 基准测试](https://github.com/llvm-mirror/test-suite/tree/master/MultiSource/Benchmarks/7zip)[^4] 的分析摘要。在图表中，你可以看到由于 CPU `Bad Speculation`（坏的猜测）以及特别是由于误判的分支，大量的执行时间被浪费了。
+TMA 通过最新的 Intel VTune Profiler 中的 "[微架构探索](https://software.intel.com/en-us/vtune-help-general-exploration-analysis)"[^3] 分析进行展示。图  @fig:Vtune_GE 显示了 [7-zip 基准测试](https://github.com/llvm-mirror/test-suite/tree/master/MultiSource/Benchmarks/7zip)[^4] 的分析摘要。在图表中，你可以看到由于 CPU `Bad Speculation`（错误推测）以及特别是由于误判的分支，大量的执行时间被浪费了。
 
 ![Intel VTune Profiler 中的 "微架构探索" 分析。](../../img/pmu-features/Vtune_GE.png){#fig:Vtune_GE width=90%}
 

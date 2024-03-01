@@ -1,10 +1,8 @@
-
-
-## 基于硬件的采样功能
+## 基于硬件的采样功能 {#sec:secPEBS}
 
 主要 CPU 供应商提供了一系列附加功能来增强性能分析。由于 CPU 供应商以不同的方式处理性能监控，因此这些功能不仅在调用方式上存在差异，而且在功能上也存在差异。在 Intel 处理器中，它被称为处理器事件采样 (PEBS)，首次引入于 NetBurst 微架构。AMD 处理器上类似的功能称为指令采样 (IBS)，从 AMD Opteron 家族 (10h 代) 核心开始可用。接下来，我们将更详细地讨论这些功能，包括它们的相似之处和不同之处。
 
-### 英特尔平台上的 PEBS
+### 英特尔平台上的 PEBS 
 
 与最后分支记录类似，PEBS 用于在分析程序时捕获每个收集到的样本的额外数据。当性能计数器配置为 PEBS 时，处理器会保存一组具有定义格式的额外数据，称为 PEBS 记录。英特尔 Skylake CPU 的 PEBS 记录格式如图  @fig:PEBS_record 所示。记录包含通用寄存器状态 (`EAX`, `EBX`, `ESP` 等）、`EventingIP`, `Data Linear Address` 和稍后将讨论的 `延迟值`。PEBS 记录的内容布局因不同的微架构而异，请参阅 [@IntelOptimizationManual, 第 3B 卷，第 20 章 性能监控]。
 
@@ -87,7 +85,7 @@ $ spe-parser perf.data -t csv
 
 分析器可能会将 `load3` 标记为导致大量缓存未命中的指令，而实际上，真正的罪魁祸首是 `load1`。对于高性能处理器，这种滑动可能数百条处理器指令。这通常会让性能工程师感到非常困惑。有兴趣的读者可以访问 Intel 开发者专区网站: [https://software.intel.com/en-us/vtune-help-hardware-event-skid](https://software.intel.com/en-us/vtune-help-hardware-event-skid)[^4] 了解更多关于此类问题基础原因的信息。
 
-通过让处理器本身存储指令指针（以及其他信息）可以缓解滑移问题。使用 Intel PEBS 时，PEBS 记录中的 `EventingIP` 字段指示导致事件的指令。这通常仅适用于受支持事件的一个子集，称为“精确事件”。可以在 [@IntelOptimizationManual, 第 3B 卷，第 20 章 性能监控] 中找到特定微架构的精确事件完整列表。有关使用 PEBS 精确事件缓解滑移的示例，请参见 easyperf 博客: [https://easyperf.net/blog/2018/08/29/Understanding-performance-events-skid](https://easyperf.net/blog/2018/08/29/Understanding-performance-events-skid).[^2]
+通过让处理器本身存储指令指针（以及其他信息）可以缓解滑移问题。使用 Intel PEBS 时，PEBS 记录中的 `EventingIP` 字段指示导致事件的指令。这通常仅适用于受支持事件的一个子集，称为“精确事件”。可以在 [@IntelOptimizationManual, Volume 3B, Chapter 20 Performance Monitoring] 中找到特定微架构的精确事件完整列表。有关使用 PEBS 精确事件缓解滑移的示例，请参见 easyperf 博客: [https://easyperf.net/blog/2018/08/29/Understanding-performance-events-skid](https://easyperf.net/blog/2018/08/29/Understanding-performance-events-skid).[^2]
 
 以下是 Skylake 微架构的精确事件列表：
 
@@ -120,7 +118,7 @@ $ perf record -e cycles:pp -- ./a.exe
 
 使用 IBS Execute 和 ARM SPE 采样，您还可以深入分析应用程序执行的内存访问。一种方法是转储收集的样本并手动处理它们。IBS 会保存确切的线性地址、其延迟、访问来自何处（缓存或 DRAM）、以及它是否在 DTLB 中命中或未命中。SPE 可用于估计内存子系统组件的延迟和带宽、估计单个加载/存储的内存延迟等等。
 
-这些扩展最重要的用例之一是检测真实共享和虚假共享，我们将在 [@sec:TrueFalseSharing] 中讨论。Linux `perf c2c` 工具大量依赖所有三种机制（PEBS、IBS 和 SPE）来查找可能遇到真实/虚假共享的争用内存访问：它匹配不同线程的加载/存储地址，并检查命中是否发生在由其他线程修改的缓存行中。
+这些扩展最重要的用例之一是检测真实共享和虚伪共享，我们将在 [@sec:TrueFalseSharing] 中讨论。Linux `perf c2c` 工具大量依赖所有三种机制（PEBS、IBS 和 SPE）来查找可能遇到真实/虚伪共享的争用内存访问：它匹配不同线程的加载/存储地址，并检查命中是否发生在由其他线程修改的缓存行中。
 
 [^1]: PEBS 抓取器工具 - [https://github.com/andikleen/pmu-tools/tree/master/pebs-grabber](https://github.com/andikleen/pmu-tools/tree/master/pebs-grabber)。需要 root 权限。
 [^2]: 性能滑移 - [https://easyperf.net/blog/2018/08/29/Understanding-performance-events-skid](https://easyperf.net/blog/2018/08/29/Understanding-performance-events-skid)

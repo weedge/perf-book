@@ -1,10 +1,8 @@
+## 编译器内联函数 {#sec:secIntrinsics}
 
+有些类型的应用程序有值得大力调整的热点。然而，编译器在这些热点生成的代码并不总是符合我们的期望。例如，程序在循环中进行一些计算，而编译器以次优的方式向量化。这通常涉及到一些棘手或特殊的算法，我们可以为这些算法设计出更好的指令序列。使用C和C++语言的标准结构让编译器生成所需的汇编代码可能非常困难，甚至是不可能的。
 
-## 使用编译器内部函数 {#sec:secIntrinsics}
-
-某些类型的应用程序具有值得重点调整的热点。但是，对于这些热点生成的代码，编译器并不总是按照我们想要的去做。例如，程序在循环中进行一些计算，而编译器以次优方式对其进行矢量化。这通常涉及一些棘手的或专门的算法，我们可以为其设计更好的指令序列。使用 C 和 C++ 语言的标准结构来让编译器生成所需的汇编代码可能非常困难甚至不可能。
-
-希望我们可以强制编译器生成特定的汇编指令，而无需编写低级汇编语言。为了实现这一点，可以使用编译器内部函数，编译器内部函数会转换成特定的汇编指令。内部函数与内联汇编具有同样的好处，而且还提高了代码的可读性，允许编译器进行类型检查，辅助指令调度，并有助于减少调试。[@lst:Intrinsics] 中的示例展示了如何通过编译器内部函数（函数 `bar`）对函数 `foo` 中的相同循环进行编码。
+幸运的是，有可能在不编写低级汇编语言的情况下，强制编译器生成特定的汇编指令。为了实现这一点，可以使用编译器内联函数，它们反过来被翻译成特定的汇编指令。内联函数提供了与使用内联汇编相同的好处，但同时也提高了代码的可读性，允许编译器类型检查，协助指令调度，并有助于减少调试。在[@lst:Intrinsics]中的示例展示了如何通过编译器内联函数（函数`bar`）来编码函数`foo`中的相同循环。
 
 代码清单:编译器内部函数
 
@@ -38,9 +36,9 @@ void bar(float *a, float *b, float *c, unsigned N) {
 
 ISPC 的一次编写，多目标运行模式很有吸引力。然而，我们可能希望更紧密地集成到 C++ 程序中，例如与模板互操作，或者避免单独的构建步骤并使用相同的编译器。相反，内部函数提供更多的控制，但开发成本更高。
 
-我们可以结合两者的优势并避免这些缺点，使用所谓的嵌入式领域特定语言，其中向量操作表示为普通的 C++ 函数。您可以将这些函数视为“可移植的内部函数”，例如 `Add` 或 `LoadU`。即使多次编译您的代码（每个指令集一次），也可以在普通 C++ 库中完成，方法是使用预处理器在不同的编译器设置下“重复”您的代码，但位于独特的命名空间中。一个例子是之前提到的 Highway 库，[^12] 它只要求 C++11 标准。
+我们可以结合两者的优势并避免这些缺点，使用所谓的嵌入式领域特定语言，其中向量操作表示为普通的 C++ 函数。您可以将这些函数视为“可移植的内部函数(portable intrinsics)”，例如 `Add` 或 `LoadU`。即使多次编译您的代码（每个指令集一次），也可以在普通 C++ 库中完成，方法是使用预处理器在不同的编译器设置下“重复”您的代码，但位于独特的命名空间中。一个例子是之前提到的 Highway 库，[^12] 它只要求 C++11 标准。
 
-与 ISPC 一样，Highway 也支持检测最佳可用指令集，这些指令集分为“簇”，在 x86 上对应于 Intel Core (S-SSE3)、Nehalem (SSE4.2)、Haswell (AVX2)、Skylake (AVX-512) 或 Icelake/Zen4 (AVX-512 with extensions)。然后它从相应命名空间调用您的代码。
+与 ISPC 一样，Highway 也支持检测最佳可用指令集，这些指令集分为“簇(clusters)”，在 x86 上对应于 Intel Core (S-SSE3)、Nehalem (SSE4.2)、Haswell (AVX2)、Skylake (AVX-512) 或 Icelake/Zen4 (AVX-512 with extensions)。然后它从相应命名空间调用您的代码。
 
 与内部函数不同，代码保持可读性（每个函数没有前缀/后缀）和可移植性。
 
@@ -60,31 +58,32 @@ float calcSum(const float* HWY_RESTRICT array, size_t count) {
   return ReduceSum(d, sum);
 }
 ~~~~
-注意在循环处理向量大小 `Lanes(d)` 的倍数之后的显式余数处理。虽然这更加冗长，但它使实际发生的事情变得清晰可见，并允许进行优化，例如覆盖最后一个向量而不是依赖于 `MaskedLoad’，甚至当已知 `count` 是向量大小的倍数时完全跳过余数。
 
-Highway 支持超过 200 个操作，可以分为以下类别：
+注意循环处理向量大小`Lanes(d)`的倍数后余数的显式处理。虽然这更加冗长，但它使实际发生的事情变得可见，并允许进行优化，例如重叠最后一个向量而不是依赖于`MaskedLoad`，或者当`count`已知是向量大小时完全跳过余数。
 
-* 初始化
-* 获取/设置通道
-* 获取/设置块
-* 打印
-* 元组
-* 算术
-* 逻辑
-* 掩码
-* 比较
-* 内存
-* 缓存控制
-* 类型转换
-* 组合
-* 旋转/排列
-* 在 128 位块内旋转
-* 减少
-* 加密
+Highway支持超过200种操作，可以分为以下几类：
 
-有关操作的完整列表，请参阅其文档 [^13] 和 FAQ: [https://github.com/google/highway/blob/master/g3doc/faq.md](https://github.com/google/highway/blob/master/g3doc/faq.md)。您也可以在在线 编译器探索器: [https://gcc.godbolt.org/z/zP7MYe9Yf](https://gcc.godbolt.org/z/zP7MYe9Yf) 中进行试验。
+* 初始化(Initialization)
+* 获取/设置车道(Getting/setting lanes)
+* 获取/设置块(Getting/setting blocks)
+* 打印(Printing)
+* 元组(Tuples)
+* 算术(Arithmetic)
+* 逻辑(Logical)
+* 掩码(Masks)
+* 比较(Comparisons)
+* 内存(Memory)
+* 缓存控制(Cache control)
+* 类型转换(Type conversion)
+* 组合(Combine)
+* 洗牌/排列(Swizzle/permute)
+* 在128位块内进行洗牌(Swizzling within 128-bit blocks)
+* 归约(Reductions)
+* 加密(Crypto)
 
-其他库包括 Eigen、nsimd、SIMDe、VCL 和 xsimd。需要注意的是，C++ 标准化工作从 Vc 库开始，导致了 std::experimental::simd，但它提供了一组非常有限的操作，截至撰写本文时仅在 GCC 11 编译器上支持。
+有关操作的完整列表，请参见其文档[^13]和[常见问题解答](https://github.com/google/highway/blob/master/g3doc/faq.md)。您还可以在在线[Compiler Explorer](https://gcc.godbolt.org/z/zP7MYe9Yf)中尝试它。
+
+其他库包括Eigen、nsimd、SIMDe、VCL和xsimd。请注意，从Vc库开始的C++标准化工作导致了std::experimental::simd，但它提供了非常有限的操作集，并且截至本文撰写时仅在GCC 11编译器上支持。
 
 [^11]: 英特尔内部函数指南 - [https://software.intel.com/sites/landingpage/IntrinsicsGuide/](https://software.intel.com/sites/landingpage/IntrinsicsGuide/)。
 [^12]: Highway 库: [https://github.com/google/highway](https://github.com/google/highway)

@@ -31,7 +31,7 @@ $ LD_PRELOAD=/usr/lib64/liblppreload.so clang++ a.cpp
 
 除了采用大页之外，还可以使用优化 I-cache 性能的标准技术来改善 ITLB 性能。例如，重新排序函数以更好地定位热门函数，通过链接时优化 (LTO/IPO) 减少热门区域的大小，使用概要引导优化 (PGO) 和 BOLT，以及减少激进内联。
 
-BOLT 提供了 `-hugify` 选项，可以根据配置文件数据自动将大页用于热门代码。使用此选项时，`llvm-bolt` 将注入代码，在运行时将热门代码放在 2MB 页面上。该实现利用了 Linux 透明大页 (THP)。这种方法的优点是只有少部分代码映射到大页，所需的大页数量最小化，因此页面碎片减少。
+BOLT 提供了 `-hugify` 选项，可以根据优化分析文件数据自动将大页用于热门代码。使用此选项时，`llvm-bolt` 将注入代码，在运行时将热门代码放在 2MB 页面上。该实现利用了 Linux 透明大页 (THP)。这种方法的优点是只有少部分代码映射到大页，所需的大页数量最小化，因此页面碎片减少。
 
 [^1]: "使用大页为代码带来的性能优势" - [https://easyperf.net/blog/2022/09/01/Utilizing-Huge-Pages-For-Code](https://easyperf.net/blog/2022/09/01/Utilizing-Huge-Pages-For-Code).
 [^2]: iodlr 库 - [https://github.com/intel/iodlr](https://github.com/intel/iodlr).

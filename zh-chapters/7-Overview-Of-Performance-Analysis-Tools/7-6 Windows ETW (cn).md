@@ -6,7 +6,7 @@
 
 ### 如何配置它
 
-从 Windows 10 开始，使用 `Wpr.exe` 可以录制 ETW 数据，无需任何额外下载。但是要启用系统范围的分析，您必须是管理员并启用 `SeSystemProfilePrivilege`。Windows 性能记录器工具支持一组内置录制配置文件，适用于常见性能问题。您可以通过创作带有 `.wprp` 扩展名的自定义性能记录器配置文件 XML 文件来定制您的录制需求。
+从 Windows 10 开始，使用 `Wpr.exe` 可以录制 ETW 数据，无需任何额外下载。但是要启用系统范围的分析，您必须是管理员并启用 `SeSystemProfilePrivilege`。Windows 性能记录器工具支持一组内置录制优化分析文件，适用于常见性能问题。您可以通过创作带有 `.wprp` 扩展名的自定义性能记录器优化分析文件 XML 文件来定制您的录制需求。
 
 如果您不仅想要录制还想查看录制的 ETW 数据，则需要安装 Windows Performance Toolkit (WPT)。您可以从 Windows SDK[^1] 或 ADK[^2] 下载页面下载 Windows Performance Toolkit。Windows SDK 体积庞大，您不一定需要所有部分。在我们的例子中，我们只勾选了 Windows Performance Toolkit 的复选框。您可以将 WPT作为您自己应用程序的一部分进行再分发。
 
@@ -63,14 +63,14 @@ C:\Windows\System32\wpr.exe
 #### 捕获痕迹
 
 - 启动 ETWController。
-- 选择 CSwitch 配置文件以跟踪线程等待时间以及其他默认录制设置。保持复选框“*记录鼠标点击*”和“*获取循环屏幕截图*”启用，以便稍后借助屏幕截图导航到慢速点。参见图  @fig:ETWController_Dialog 。
+- 选择 CSwitch 优化分析文件以跟踪线程等待时间以及其他默认录制设置。保持复选框“*记录鼠标点击*”和“*获取循环屏幕截图*”启用，以便稍后借助屏幕截图导航到慢速点。参见图  @fig:ETWController_Dialog 。
 - 按“*开始录制*”。
 - 从互联网下载一些可执行文件，解压缩它并双击可执行文件启动它。
 - 之后，您可以通过按“*停止录制*”按钮停止分析。
 
 ![使用 ETWController UI 启动 ETW 收集.](../../img/perf-tools/ETWController_Dialog.png){#fig:ETWController_Dialog width=75%}
 
-第一次停止分析需要更长的时间，因为所有托管代码都会生成合成 pdb，这是一个一次性操作。分析达到已停止状态后，您可以按“*在 WPA 中打开*”按钮，将 ETL 文件加载到 Windows Performance Analyzer 中，并附带 ETWController 提供的配置文件。CSwitch 配置文件会生成大量数据，这些数据存储在 4 GB 的环形缓冲区中，允许您在最旧的事件被覆盖之前录制 1-2 分钟。有时在正确的时间点停止分析有点艺术气息。如果您遇到偶发问题，可以将录制保持启用数小时，并在事件（例如文件中由轮询脚本检查的日志条目）出现时停止录制，以在问题发生时停止录制。
+第一次停止分析需要更长的时间，因为所有托管代码都会生成合成 pdb，这是一个一次性操作。分析达到已停止状态后，您可以按“*在 WPA 中打开*”按钮，将 ETL 文件加载到 Windows Performance Analyzer 中，并附带 ETWController 提供的优化分析文件。CSwitch 优化分析文件会生成大量数据，这些数据存储在 4 GB 的环形缓冲区中，允许您在最旧的事件被覆盖之前录制 1-2 分钟。有时在正确的时间点停止分析有点艺术气息。如果您遇到偶发问题，可以将录制保持启用数小时，并在事件（例如文件中由轮询脚本检查的日志条目）出现时停止录制，以在问题发生时停止录制。
 
 Windows 支持事件日志和性能计数器触发器，允许在性能计数器达到阈值或特定事件写入事件日志时启动脚本。如果您需要更复杂的停止触发器，应该看一下 PerfView，它允许定义一个性能计数器阈值，该阈值必须达到并在那里停留 x 秒，然后停止分析。这样，随机峰值就不会再触发误报。
 
@@ -96,7 +96,7 @@ Windows 支持事件日志和性能计数器触发器，允许在性能计数器
 
 知道 Defender 是问题只是第一步。如果您再看上面面板，您会看到延迟并不是完全由繁忙的防病毒扫描引起的。`MsMpEng.exe` 进程从时间 `35.1` 一直活跃到 `35.7`，但应用程序并没有立即启动之后。从时间 `35.7` 到 `36.2` 有额外的 0.5 秒延迟，在此期间 CPU 大部分处于空闲状态，什么都不做。要找到根本原因，需要跟踪跨进程的线程唤醒历史，我们将在此处不介绍。最后，您会发现一个阻止性的 Web 服务调用 `MpClient.dll!MpClient::CMpSpyNetContext::UpdateSpynetMetrics`，它确实等待某个 Microsoft Defender Web 服务做出响应。如果您还启用了 TCP/IP 或套接字 ETW 跟踪，您还可以找出 Microsoft Defender 与哪个远程端点通信。因此，延迟的第二部分是由 `MsMpEng.exe` 进程等待网络引起的，这也阻止了我们的应用程序运行。
 
-这个案例研究只展示了一个使用 WPA 可以有效分析问题的例子，但还有其他类型的问​​题。WPA 界面非常丰富且高度可定制。它支持自定义配置文件，可以按照您喜欢的方式配置图表和表格以可视化 CPU、磁盘、文件等。最初，WPA 是为设备驱动程序开发人员开发的，并且内置了一些不专注于应用程序开发的配置文件。ETWController 带有自己的配置文件 (*Overview.wpaprofile*)，您可以将其设置为默认配置文件，位于 *配置文件 -> 保存启动配置文件* 下，以便始终使用性能概览配置文件。
+这个案例研究只展示了一个使用 WPA 可以有效分析问题的例子，但还有其他类型的问​​题。WPA 界面非常丰富且高度可定制。它支持自定义优化分析文件，可以按照您喜欢的方式配置图表和表格以可视化 CPU、磁盘、文件等。最初，WPA 是为设备驱动程序开发人员开发的，并且内置了一些不专注于应用程序开发的优化分析文件。ETWController 带有自己的优化分析文件 (*Overview.wpaprofile*)，您可以将其设置为默认优化分析文件，位于 *优化分析文件 -> 保存启动优化分析文件* 下，以便始终使用性能概览优化分析文件。
 
 
 [^1]: Windows SDK 下载 [https://developer.microsoft.com/en-us/windows/downloads/sdk-archive/](https://developer.microsoft.com/en-us/windows/downloads/sdk-archive/)

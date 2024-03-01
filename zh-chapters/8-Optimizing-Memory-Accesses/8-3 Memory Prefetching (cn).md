@@ -1,6 +1,4 @@
-
-
-## 显式内存预取
+## 显式内存预取 {#sec:memPrefetch}
 
 到现在为止，您应该已经知道未能在缓存中解析的内存访问通常代价高昂。现代 CPU 非常努力地降低预取请求提前足够发出时的缓存未命中惩罚。如果请求的内存位置不在缓存中，我们将无论如何遭受缓存未命中，因为我们必须访问 DRAM 并提取数据。但是，如果我们在程序需要数据时将该内存位置引入缓存，那么我们实际上可以将缓存未命中惩罚降为零。
 
@@ -24,7 +22,7 @@ for (int i = 0; i < N; ++i) {
 
 这里还有另一个重要观察。当 CPU 接近完成第一次迭代时，它会推测性地开始执行来自第二次迭代的指令。这在迭代之间创建了一个积极的执行重叠。然而，即使在现代处理器中，也缺少足够的 OOO 功能，无法完全将缓存未命中延迟与来自迭代 1 的 `doSomeExtensiveComputation` 的执行重叠。换句话说，在我们的例子中，CPU 无法提前查看当前执行，以便足够早地发出加载指令。
 
-幸运的是，这并不是死路一条，因为有一种方法可以加速这段代码。为了隐藏缓存未命中延迟，我们需要将其与 `doSomeExtensiveComputation` 的执行重叠。如果我们管道化随机数生成并在下一次迭代中开始预取内存位置，就可以实现这一点，如 [@lst:MemPrefetch2] 所示。请注意使用 `__builtin_prefetch`: [https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html),[^4] 开发人员可以使用的特殊提示，明确请求 CPU 预取特定内存位置。图  @fig:SWmemprefetch2 展示了这种转换的图形说明。
+幸运的是，这并不是死路一条，因为有一种方法可以加速这段代码。为了隐藏缓存未命中延迟，我们需要将其与 `doSomeExtensiveComputation` 的执行重叠。如果我们流水线化随机数生成并在下一次迭代中开始预取内存位置，就可以实现这一点，如 [@lst:MemPrefetch2] 所示。请注意使用 `__builtin_prefetch`: [https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html),[^4] 开发人员可以使用的特殊提示，明确请求 CPU 预取特定内存位置。图  @fig:SWmemprefetch2 展示了这种转换的图形说明。
 
 代码清单:利用明确的软件内存预取提示。
 

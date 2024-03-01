@@ -13,3 +13,5 @@ gitbook/
 *.fdb_latexmk
 *.fls
 *.log
+
+.DS_Store

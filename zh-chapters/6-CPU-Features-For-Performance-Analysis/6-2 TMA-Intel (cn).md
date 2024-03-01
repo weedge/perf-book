@@ -2,7 +2,7 @@
 
 TMA方法学首次由英特尔于2014年提出，并从SandyBridge系列处理器开始提供支持。英特尔的实现支持每个高级别桶的嵌套类别，从而更好地了解程序中的CPU性能瓶颈（参见图  @fig:TMA ）。
 
-该工作流程旨在“深入挖掘(drill down)”TMA层次结构的较低级别，直到我们达到对性能瓶颈的非常具体的分类为止。例如，首先，我们收集主要的四个桶的指标：`Front End Bound`、`Back End Bound`、`Retiring`、`Bad Speculation`。比如，我们发现程序执行的大部分时间被内存访问阻塞了（这是`Back End Bound`桶，参见图  @fig:TMA ）。接下来的步骤是再次运行工作负载，并仅收集与`Memory Bound`桶有关的特定指标。这个过程重复进行，直到我们知道确切的根本原因，例如，`L3 Bound`。
+该工作流程旨在“深入挖掘(drill down)”TMA层次结构的较低级别，直到我们达到对性能瓶颈的非常具体的分类为止。例如，首先，我们收集主要的四个桶的指标：`Front End Bound`、`Back End Bound`、`Retiring`、`Bad Speculation`。比如，我们发现程序执行的大部分时间被内存访问阻塞了（这是`Back End Bound`桶，参见图 @fig:TMA ）。接下来的步骤是再次运行工作负载，并仅收集与`Memory Bound`桶有关的特定指标。这个过程重复进行，直到我们知道确切的根本原因，例如，`L3 Bound`。
 
 ![TMA性能瓶颈的层次结构。*© Image by Ahmad Yasin.*](../../img/pmu-features/TMAM.png){#fig:TMA width=90%}
 
@@ -22,9 +22,9 @@ TMA的第一步是识别程序中的性能瓶颈。在完成这一步之后，�
 
 ### 步骤 1：识别瓶颈 {.unlisted .unnumbered}
 
-作为第一步，我们运行微基准测试并收集一组有限的事件，这些事件将帮助我们计算第 1 级指标。在这里，我们尝试通过将它们归因于四个 L1 桶（“前端受限”、“后端受限”、“退休”、“错误猜测”）来识别应用程序的高级性能瓶颈。可以使用 Linux `perf` 工具收集第 1 级指标。从 Linux 内核 4.8 开始，`perf` 在 `perf stat` 命令中有一个 `--topdown` 选项，用于打印 TMA 第 1 级指标。以下是我们基准测试的细分。本部分的命令输出经过修剪以节省空间。
+作为第一步，我们运行微基准测试并收集一组有限的事件，这些事件将帮助我们计算第 1 级指标。在这里，我们尝试通过将它们归因于四个 L1 桶（“前端受限(FE bound)”、“后端受限(BE bound)”、“退役(retiring)”、“错误推测(Bad Speculation)”）来识别应用程序的高级性能瓶颈。可以使用 Linux `perf` 工具收集第 1 级指标。从 Linux 内核 4.8 开始，`perf` 在 `perf stat` 命令中有一个 `--topdown` 选项，用于打印 TMA 第 1 级指标。以下是我们基准测试的细分。本部分的命令输出经过修剪以节省空间。
 
-[TODO]: 在AlderLake上，`perf stat --topdown`无法在内核4.8上工作，需要更新版本。现在它可以打印L1和L2 TMA指标。（请参阅 [https://github.com/dendibakh/perf-book/issues/42](https://github.com/dendibakh/perf-book/issues/42)）
+[TODO]: 在AlderLake上, `perf stat --topdown`无法在内核4.8上工作，需要更新版本。现在它可以打印L1和L2 TMA指标。（请参阅 [https://github.com/dendibakh/perf-book/issues/42](https://github.com/dendibakh/perf-book/issues/42)）
 
  ```bash
 $ perf stat --topdown -a -- taskset -c 0 ./benchmark.exe
@@ -61,7 +61,7 @@ S0-C0  Retiring.Microcode_Sequencer:   7.65 % Slots
 
 在此命令中，我们还将进程固定到 CPU0（使用 `taskset -c 0`），并将 `toplev` 的输出仅限于此核心（`--core S0-C0`）。选项 `-l2` 告诉工具收集 Level 2 指标。选项 `--no-desc` 禁用每个指标的描述。
 
-我们可以看到，应用程序的性能受内存访问限制（`Backend_Bound.Memory_Bound`）。近一半的 CPU 执行资源都浪费在等待内存请求完成上。现在让我们更深入地挖掘一次：[^17]
+我们可以看到，应用程序的性能受内存访问限制（`Backend_Bound.Memory_Bound`）。近一半的 CPU 执行资源都浪费在等待内存请求完成上。现在让我们更深入地挖掘一次[^17]：
 
 ```bash
 $ ~/pmu-tools/toplev.py --core S0-C0 -l3 -v --no-desc taskset -c 0 ./benchmark.exe
@@ -175,12 +175,12 @@ int main() {
 
 通过这个显式的内存预取提示，执行时间从 8.5 秒减少到 6.5 秒。此外，`CYCLE_ACTIVITY.STALLS_L3_MISS` 事件的数量几乎减少了十倍：从 19B 减少到 2B。
 
-TMA 是一个迭代过程，因此一旦我们修复了一个问题，我们就需要从步骤 1 开始重复该过程。它可能会将瓶颈移动到另一个桶中，在本例中是“退休”。这是一个演示 TMA 方法工作流程的简单示例。分析现实世界的应用程序不太可能那么容易。本书第二部分的章节组织得井井有条，以便与 TMA 流程一起使用。特别是，第 8 章涵盖“内存受限”类别，第 9 章涵盖“核心受限”，第 10 章涵盖“错误猜测”，第 11 章涵盖“前端受限”。这种结构的目的是形成一个清单，供您在遇到特定性能瓶颈时用于驱动代码更改。
+TMA是一个迭代过程，因此一旦我们解决了一个问题，就需要从第一步开始重复这个过程。很可能瓶颈会转移到另一个类别，在这个例子中是`Retiring`。这是一个简单的例子，展示了TMA方法论的工作流程。分析现实世界的应用程序不太可能那么简单。书的第二部分章节的组织旨在方便与TMA过程一起使用。特别是，第8章涵盖了`Memory Bound`类别，第9章涵盖了`Core Bound`，第10章涵盖了`Bad Speculation`，第11章涵盖了`FrontEnd Bound`。这样的结构意图是形成一个清单，当你遇到特定的性能瓶颈时，可以用来驱动代码变更。
 
 #### 其他资源和链接 {.unlisted .unnumbered}
 
-- Ahmad Yasin 的论文“用于性能分析和计数器架构的顶向下方法” [@TMA_ISPASS]。
-- Ahmad Yasin 在 IDF'15 上的演讲“使用英特尔 Skylake 的顶向下分析使软件优化变得简单”，网址： [https://youtu.be/kjufVhyuV_A](https://youtu.be/kjufVhyuV_A)。
+- Ahmad Yasin 的论文"用于性能分析和计数器架构的顶向下方法" [@TMA_ISPASS]。
+- Ahmad Yasin 在 IDF'15 上的演讲"使用英特尔 Skylake 的顶向下分析使软件优化变得简单"，网址： [https://youtu.be/kjufVhyuV_A](https://youtu.be/kjufVhyuV_A)。
 - Andi Kleen 的博客：pmu-tools，第二部分：toplev，网址： [http://halobates.de/blog/p/262](http://halobates.de/blog/p/262)。
 - Toplev 手册，网址： [https://github.com/andikleen/pmu-tools/wiki/toplev-manual](https://github.com/andikleen/pmu-tools/wiki/toplev-manual)。
 

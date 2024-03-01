@@ -1,6 +1,6 @@
 
 
-## 用谓词替换分支 {#sec:BranchlessPredication}
+## 用谓词替换分支(Replace Branches with Predication) {#sec:BranchlessPredication}
 
 某些分支可以通过执行分支的两部分，然后选择正确的结果（*谓词*）来有效地消除。当这种转换可能有利可图时，代码示例显示在 [@lst:PredicatingBranchesCode] 中。如果 TMA 提示 `if (cond)` 分支具有非常高的误判率，您可以尝试通过执行右侧显示的转换来消除分支。
 

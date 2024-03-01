@@ -1,16 +1,16 @@
 ## 性能监控单元 {#sec:PMU}
 
-每个现代CPU都提供了监控性能的设施，这些设施被合并到了性能监控单元（PMU）中。该单元集成了帮助开发人员分析其应用程序性能的功能。一个现代Intel CPU中的PMU示例如图@fig:PMU所示。大多数现代PMU都有一组性能监控计数器（PMC），可用于收集程序执行过程中发生的各种性能事件。稍后在[@sec:counting]中，我们将讨论如何使用PMC进行性能分析。此外，PMU还具有其他增强性能分析的功能，如LBR、PEBS和PT，[@sec:PmuChapter]专门讨论了这个话题。
+每个现代CPU都提供了监控性能的设施，这些设施被合并到了性能监控单元（PMU）中。该单元集成了帮助开发人员分析其应用程序性能的功能。一个现代Intel CPU中的PMU示例如图 @fig:PMU 所示。大多数现代PMU都有一组性能监控计数器（PMC），可用于收集程序执行过程中发生的各种性能事件。稍后在[@sec:counting]中，我们将讨论如何使用PMC进行性能分析。此外，PMU还具有其他增强性能分析的功能，如LBR、PEBS和PT，[@sec:PmuChapter]专门讨论了这个话题。
 
 [TODO]: 此图中使用的字体大小对于舒适阅读来说太小了。
 
-![现代Intel CPU的性能监控单元。](../../img/uarch/PMC.png){#fig:PMU width=70%}
+![现代Intel CPU的性能监控单元](../../img/uarch/PMU.png){#fig:PMU width=70%}
 
 随着每一代CPU设计的演进，它们的PMU也在发展。在Linux上，可以使用`cpuid`命令确定CPU中PMU的版本，如[@lst:QueryPMU]所示。类似的信息可以通过检查`dmesg`命令的输出从内核消息缓冲区中提取。每个Intel PMU版本的特性，以及与上一个版本的变化，可以在[@IntelOptimizationManual, Volume 3B, Chapter 20]中找到。
 
-查询您的PMU的列表:
+查询PMU的列表:
 
-```bash
+~~~~ {#lst:QueryPMU .bash}
 $ cpuid
 ...
 Architecture Performance Monitoring Features (0xa/eax):
@@ -22,7 +22,7 @@ Architecture Performance Monitoring Features (0xa/edx):
       number of fixed counters    = 0x3 (3)
       bit width of fixed counters = 0x30 (48)
 ...
-```
+~~~~
 
 ### 性能监控计数器 {#sec:PMC}
 
@@ -34,15 +34,13 @@ Architecture Performance Monitoring Features (0xa/edx):
 
 当工程师分析他们的应用程序时，他们通常会收集已执行的指令数和经过的周期数。这就是为什么一些PMU具有专用的PMC用于收集这些事件的原因。固定计数器始终在CPU核心内部测量相同的事物。对于可编程计数器，用户可以选择要测量的内容。
 
-例如，在Intel Skylake架构（PMU版本4，参见[@lst:QueryPMU]），每个物理核心有三个固定计数器和八个可编程计数器。这三个固定计数器分别设置为计算核心时钟、参考时钟和已退休指令（有关这些指标的更多详细信息，请参见[@sec:secMetrics]）。AMD Zen4和ARM Neoverse V1核心每个处理器核心支持6个可编程性能监控计数器，没有固定计数器。
+例如，在Intel Skylake架构（PMU版本4，参见[@lst:QueryPMU]），每个物理核心有三个固定计数器和八个可编程计数器。这三个固定计数器分别设置为计算核心时钟、参考时钟和已退役(retired)指令（有关这些指标的更多详细信息，请参见[@sec:secMetrics]）。AMD Zen4和ARM Neoverse V1核心每个处理器核心支持6个可编程性能监控计数器，没有固定计数器。
 
 PMU提供了100多种可用于监控的事件并不罕见。图 @fig:PMU 仅显示了现代Intel CPU上供监控的性能事件的一小部分。不难注意到可用PMC的数量远远小于性能事件的数量。无法同时计算所有事件，但是分析工具通过在程序执行期间在性能事件组之间进行复用来解决此问题（参见[@sec:secMultiplex]）。
 
 - 对于Intel CPU，可以在[@IntelOptimizationManual, Volume 3B, Chapter 20]中找到性能事件的完整列表，或者在[perfmon-events.intel.com](https://perfmon-events.intel.com/)上找到。
 - AMD并不为每个AMD处理器发布性能监控事件的列表。感兴趣的读者可以在Linux perf源代码中找到一些信息[代码](https://github.com/torvalds/linux/blob/master/arch/x86/events/amd/core.c)[^3]。此外，您可以使用AMD uProf命令行工具列出可用于监控的性能事件。有关AMD性能计数器的一般信息，请参见[@AMDProgrammingManual, 13.2 Performance Monitoring Counters]。
-- 对于ARM芯片，性能事件没有如此明确定义。供应商按照ARM架构实
-
-现核心，但性能事件的含义和支持的事件在很大程度上变化。对于由ARM自己设计的ARM Neoverse V1处理器，性能事件的列表可以在[@ARMNeoverseV1]中找到。
+- 对于ARM芯片，性能事件没有如此明确定义。供应商按照ARM架构实现核心，但性能事件的含义和支持的事件在很大程度上变化。对于由ARM自己设计的ARM Neoverse V1处理器，性能事件的列表可以在[@ARMNeoverseV1]中找到。
 
 [^2]: 当PMC的值溢出时，必须中断程序的执行。然后，软件应该保存溢出的事实。我们稍后将详细讨论它。
 [^3]: AMD核心的Linux源代码 - [https://github.com/torvalds/linux/blob/master/arch/x86/events/amd/core.c](https://github.com/torvalds/linux/blob/master/arch/x86/events/amd/core.c)
